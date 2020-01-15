@@ -28,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
                 .setContentText("Text")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setLights(0xff00ff00, 300, 100);
-        //createNotificationChannel();
     }
 
     private void createNotificationChannel() {
@@ -50,8 +49,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void notification(View view) {
-        NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
         createNotificationChannel();
+        NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
         notificationManagerCompat.notify(NOTIFICATION_ID, builder.build());
     }
 }
