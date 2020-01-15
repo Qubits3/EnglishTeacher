@@ -1,15 +1,24 @@
 package com.example.englishteacher;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
+
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -17,17 +26,35 @@ public class MainActivity extends AppCompatActivity {
     private final int NOTIFICATION_ID = 1;
     NotificationCompat.Builder builder;
 
+    private static final String TAG = "MainActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Log.d(TAG, "onCreate: onCreate");
+
+        Random random = new Random();
+
+        int randomNumber = random.nextInt(3846);  //en son 3846
+
+        Intent snoozeIntent = new Intent(this, MainActivity.class);
+
+        PendingIntent snoozePendingIntent = PendingIntent.getActivity(this, 0, snoozeIntent, 0);
+
         builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_background)
-                .setContentTitle("Title")
-                .setContentText("Text")
-                .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setLights(0xff00ff00, 300, 100);
+                .setContentTitle(Words.english[randomNumber] + " -> " + Words.turkish[randomNumber])
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true)
+                .addAction(R.drawable.ic_launcher_background, "Click", snoozePendingIntent);
+    }
+
+    public static void CancelNotification(Context ctx, int notifyId) {
+        String  s = Context.NOTIFICATION_SERVICE;
+        NotificationManager mNM = (NotificationManager) ctx.getSystemService(s);
+        mNM.cancel(notifyId);
     }
 
     private void createNotificationChannel() {
@@ -39,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
+            channel.setSound(null, null);
+
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
