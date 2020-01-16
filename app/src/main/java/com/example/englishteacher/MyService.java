@@ -1,21 +1,23 @@
 package com.example.englishteacher;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
-public class MyService extends Service {
+import java.util.Arrays;
 
-    private static final String TAG = "MyService";
+public class MyService extends Service {
 
     public MyService() {
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(TAG, "onBind: onBind");
+
         // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
     }
@@ -23,14 +25,14 @@ public class MyService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {  //Her servis başlatıldığında çağrılır
 
-        Bundle extras = intent.getExtras();
+        System.out.println("onStartCommand");
 
-        String s = null;
-        if (extras != null) {
-            s = extras.getString("english");
+        Words.denemeEnglish[MainActivity.randomNumber] = null;
+
+        for (int i = 0; i < Words.denemeEnglish.length;i++){
+            System.out.print(Words.denemeEnglish[i] + " ");
         }
 
-        Log.d(TAG, "onStartCommand: " + s);
-        return START_NOT_STICKY;
+        return super.onStartCommand(intent, flags, startId);
     }
 }

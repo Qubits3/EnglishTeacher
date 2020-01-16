@@ -17,4 +17,8 @@ public class Words {
     public static String[] denemeTurkish = {
             "bir", "terk etmek", "terkedilmiş"
     };
+
+    public static String[] learned = {
+
+    };
 }

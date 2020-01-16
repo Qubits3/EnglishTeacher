@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import java.lang.reflect.Array;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
@@ -24,6 +26,9 @@ public class MainActivity extends AppCompatActivity {
     NotificationCompat.Builder builder;
 
     private static final String TAG = "MainActivity";
+    public static Random random;
+
+    public static int randomNumber = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,27 +37,17 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, "onCreate: onCreate");
 
-        Random random = new Random();
+        random = new Random();
 
-        int randomNumber = random.nextInt(3);  //en son 2197
+        randomNumber = random.nextInt(3);  //en son 2197
 
         Intent intent = new Intent(this, MyService.class);
-
-        Bundle bundle = new Bundle();
-        bundle.putString("english", Words.denemeEnglish[randomNumber]);
-        intent.putExtras(bundle);
-
-        //intent.putExtra("english", Words.denemeEnglish[randomNumber]);
-        //intent.putExtra("turkish", Words.denemeTurkish[randomNumber]);
-
-
-
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, 0);
 
         builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.notification_icon)
-                .setContentTitle(Words.english[randomNumber] + " -> " + Words.turkish[randomNumber])
+                .setContentTitle(Words.denemeEnglish[randomNumber] + " -> " + Words.denemeTurkish[randomNumber])
                 .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);
