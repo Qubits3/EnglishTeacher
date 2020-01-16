@@ -3851,6 +3851,18 @@ public class Words {
            "zero",
            "zone"};
 
+    public static String[] learned = {
+
+    };
+
+    public static String[] denemeEnglish = {
+        "a", "leave", "abandoned"
+    };
+
+    public static String[] denemeTurkish = {
+        "bir", "terk etmek", "terkedilmiş"
+    };
+
     public static String[] turkish = {
            "bir",
            "terk etmek",

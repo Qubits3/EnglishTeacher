@@ -1,22 +1,19 @@
 package com.example.englishteacher;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import java.util.Random;
 
@@ -39,16 +36,18 @@ public class MainActivity extends AppCompatActivity {
 
         int randomNumber = random.nextInt(3846);  //en son 3846
 
-        Intent snoozeIntent = new Intent(this, MainActivity.class);
-
-        PendingIntent snoozePendingIntent = PendingIntent.getActivity(this, 0, snoozeIntent, 0);
+        Intent intent = new Intent(this, MyService.class);
+        //intent.putExtra("english", Words.denemeEnglish[randomNumber]);
+        //intent.putExtra("turkish", Words.denemeTurkish[randomNumber]);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
         builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.notification_icon)
                 .setContentTitle(Words.english[randomNumber] + " -> " + Words.turkish[randomNumber])
                 .setPriority(NotificationCompat.PRIORITY_MIN)
-                .setAutoCancel(true)
-                .addAction(R.drawable.app_logo_background, "Click", snoozePendingIntent);
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true);
     }
 
     public static void CancelNotification(Context ctx, int notifyId) {
