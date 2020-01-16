@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_background)
                 .setContentTitle(Words.english[randomNumber] + " -> " + Words.turkish[randomNumber])
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setAutoCancel(true)
                 .addAction(R.drawable.ic_launcher_background, "Click", snoozePendingIntent);
     }
@@ -63,10 +63,12 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = getString(R.string.channel_name);
             String description = getString(R.string.channel_description);
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            int importance = NotificationManager.IMPORTANCE_LOW;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);  //Create notification channel
             channel.setDescription(description);
             channel.setSound(null, null);
+            channel.enableVibration(false);
+            channel.setLockscreenVisibility(importance);
 
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
