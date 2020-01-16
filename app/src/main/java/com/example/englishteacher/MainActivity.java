@@ -34,13 +34,21 @@ public class MainActivity extends AppCompatActivity {
 
         Random random = new Random();
 
-        int randomNumber = random.nextInt(3846);  //en son 3846
+        int randomNumber = random.nextInt(3);  //en son 2197
 
         Intent intent = new Intent(this, MyService.class);
+
+        Bundle bundle = new Bundle();
+        bundle.putString("english", Words.denemeEnglish[randomNumber]);
+        intent.putExtras(bundle);
+
         //intent.putExtra("english", Words.denemeEnglish[randomNumber]);
         //intent.putExtra("turkish", Words.denemeTurkish[randomNumber]);
+
+
+
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, 0);
 
         builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.notification_icon)
