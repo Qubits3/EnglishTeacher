@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
                 .setContentTitle(Words.english[randomNumber] + " -> " + Words.turkish[randomNumber])
                 .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setAutoCancel(true)
-                .addAction(R.drawable.ic_launcher_background, "Click", snoozePendingIntent);
+                .addAction(R.drawable.app_logo_background, "Click", snoozePendingIntent);
     }
 
     public static void CancelNotification(Context ctx, int notifyId) {
