@@ -1,9 +1,12 @@
 package com.example.englishteacher;
 
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,9 +21,14 @@ import java.util.Random;
 public class MainActivity extends AppCompatActivity {
 
     private final String CHANNEL_ID = "100";
-    private final int NOTIFICATION_ID = 1;
+    public final int NOTIFICATION_ID = 1;
     NotificationCompat.Builder builder;
     NotificationChannel channel;
+    PendingIntent pendingIntent;
+    NotificationManagerCompat notificationManagerCompat;
+//    static SharedPreferences sharedPreferences;
+
+    static boolean isTapped = false;
 
     private static final String TAG = "MainActivity";
 
@@ -31,7 +39,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+//        sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
+//        SharedPreferences.Editor editor = sharedPreferences.edit();
+//        editor.putInt("isDismissed", 0);  //bildirim kaydırılarak mı kapatılmış yoksa üstüne basılarak mı, 0 ise kaydırılarak kapatılmıştır
+//        editor.commit();  //kayıt
+
         randomNumber = new Random().nextInt(2197);    //en son 2197
+
+        Intent intent = new Intent(this, MyService.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        pendingIntent = PendingIntent.getService(this, 0, intent, 0);
 
         createNotification();
         createNotificationChannel();
@@ -40,10 +57,6 @@ public class MainActivity extends AppCompatActivity {
     private void createNotification() {
 
         randomNumber = new Random().nextInt(2197);
-
-        Intent intent = new Intent(this, MyService.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, 0);
 
         builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.notification_icon)
@@ -67,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
             channel.setDescription(description);
             channel.setSound(null, null);
             channel.enableVibration(false);
-            channel.setLockscreenVisibility(importance);
+            channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
 
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
@@ -81,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
     public void notification(View view) {
         createNotification();
         createNotificationChannel();
-        NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
+        notificationManagerCompat = NotificationManagerCompat.from(this);
         notificationManagerCompat.notify(NOTIFICATION_ID, builder.build());
     }
 }
