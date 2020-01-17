@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EnglishTeacher</string>
+    <string name="button">Buton</string>
+    <string name="channel_description">Bildirim ayarlarını buradan özelleştirebilirsiniz</string>
+    <string name="channel_name">Öğretici</string>
+</resources>
