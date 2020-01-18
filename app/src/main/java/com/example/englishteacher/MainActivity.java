@@ -28,8 +28,6 @@ public class MainActivity extends AppCompatActivity {
     NotificationManagerCompat notificationManagerCompat;
 //    static SharedPreferences sharedPreferences;
 
-    static boolean isTapped = false;
-
     private static final String TAG = "MainActivity";
 
     public static int randomNumber = 0;
@@ -65,8 +63,8 @@ public class MainActivity extends AppCompatActivity {
                 .setContentIntent(pendingIntent)
                 .setColorized(true)
                 .setColor(Color.BLUE)
-                .setOnlyAlertOnce(true)  //Bildirim sadece ilk geldiğinde kullanıcıyı uyarır güncellendiğinde uyarmaz
-                .setAutoCancel(true);  //Üzerine basılınca otomatik kapanır
+                .setOnlyAlertOnce(true);  //Bildirim sadece ilk geldiğinde kullanıcıyı uyarır güncellendiğinde uyarmaz
+                //.setAutoCancel(true);  //Üzerine basılınca otomatik kapanır
     }
 
     private void createNotificationChannel() {
@@ -93,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void notification(View view) {
         createNotification();
-        createNotificationChannel();
+        //createNotificationChannel();
         notificationManagerCompat = NotificationManagerCompat.from(this);
         notificationManagerCompat.notify(NOTIFICATION_ID, builder.build());
     }

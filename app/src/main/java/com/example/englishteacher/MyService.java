@@ -21,8 +21,6 @@ public class MyService extends Service {
     @Override
     public void onCreate() {
 
-
-
         super.onCreate();
     }
 
@@ -37,8 +35,6 @@ public class MyService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-        MainActivity mainActivity = new MainActivity();
 
         return super.onStartCommand(intent, flags, startId);
     }
