@@ -10,6 +10,8 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
     PendingIntent pendingIntent;
     NotificationManagerCompat notificationManagerCompat;
 //    static SharedPreferences sharedPreferences;
+
+    //long[] vibrationPattern = {100, 60, 100, 60};  //Vibration pattern for vibrating  /* bekle -> titre mantığına göre çalışır 100 ms bekle 60 ms titre 100 ms bekle 60ms bekle */
 
     private static final String TAG = "MainActivity";
 
@@ -62,7 +66,8 @@ public class MainActivity extends AppCompatActivity {
                 .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setContentIntent(pendingIntent)
                 .setColorized(true)
-                .setColor(Color.BLUE)
+                .setColor(Color.BLUE)  //Set color for app name in the notification
+                //.setVibrate(vibrationPattern)  //You must set that for vibrating operations
                 .setOnlyAlertOnce(true);  //Bildirim sadece ilk geldiğinde kullanıcıyı uyarır güncellendiğinde uyarmaz
                 //.setAutoCancel(true);  //Üzerine basılınca otomatik kapanır
     }
@@ -73,12 +78,13 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = getString(R.string.channel_name);
             String description = getString(R.string.channel_description);
-            int importance = NotificationManager.IMPORTANCE_LOW;
+            int importance = NotificationManager.IMPORTANCE_HIGH;  //Popup için en yüksek yapılmalı
             channel = new NotificationChannel(CHANNEL_ID, name, importance);  //Create notification channel
             channel.setDescription(description);
             channel.setSound(null, null);
-            channel.enableVibration(false);
+            channel.enableVibration(true);
             channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            //channel.setVibrationPattern(vibrationPattern);
 
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
@@ -90,6 +96,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void notification(View view) {
+
+        //Vibrate
+//        Vibrator vibrator = (Vibrator) getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
+//        if (vibrator != null) {
+//            vibrator.vibrate(VibrationEffect.createWaveform(vibrationPattern, -1));
+//        }
+
         createNotification();
         //createNotificationChannel();
         notificationManagerCompat = NotificationManagerCompat.from(this);
