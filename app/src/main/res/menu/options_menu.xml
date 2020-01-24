@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/option_profile"
+        android:title="@string/profile" />
+    <item
+        android:id="@+id/option_sign_in"
+        android:title="@string/sign_in" />
+    <item
+        android:id="@+id/option_sign_out"
+        android:title="@string/sign_out" />
+</menu>

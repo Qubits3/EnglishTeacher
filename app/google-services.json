@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "639158397657",
+    "firebase_url": "https://englishteacher-f0fdc.firebaseio.com",
+    "project_id": "englishteacher-f0fdc",
+    "storage_bucket": "englishteacher-f0fdc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:639158397657:android:67c340ef60c6530bec6cc8",
+        "android_client_info": {
+          "package_name": "com.example.englishteacher"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "639158397657-j9kb6ndl7c414sma36ijj5lngbslnvsi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.englishteacher",
+            "certificate_hash": "abdbd984ebb0efac550494c0cee4a241decb1de0"
+          }
+        },
+        {
+          "client_id": "639158397657-1ufni9u8s2ei8vl3q4jr6rvllt0moq9m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBdH4JQFa6slVgRa1Cbr2kTkZoHtKwBl9M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "639158397657-1ufni9u8s2ei8vl3q4jr6rvllt0moq9m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
