@@ -20,9 +20,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
@@ -30,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     FirebaseUser user;
+    FirebaseFirestore db;
 
     MenuItem optionSignIn, optionSignOut, optionProfile;
 
@@ -43,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     long[] vibrationPattern = {100, 60, 100, 60};  //Vibration pattern for vibrating  /* bekle -> titre mantığına göre çalışır 100 ms bekle 60 ms titre 100 ms bekle 60ms bekle */
 
     public static int randomNumber = 0;
+    int count = 1;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -93,10 +102,9 @@ public class MainActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
+        db = FirebaseFirestore.getInstance();
 
         Log.d(TAG, "onCreate: ");
-
-        randomNumber = new Random().nextInt(2197);    //en son 2197
 
         Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -105,7 +113,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void createNotification() {
 
-        randomNumber = new Random().nextInt(2197);
+        //ToDo: serverdan random document çek
+
+        int count = getCount();
+        Toast.makeText(getApplicationContext(), String.valueOf(count), Toast.LENGTH_SHORT).show();
+        randomNumber = new Random().nextInt(count);
+
+        //Toast.makeText(getApplicationContext(), String.valueOf(getCount()), Toast.LENGTH_LONG).show();
 
         builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.notification_icon)
@@ -147,6 +161,90 @@ public class MainActivity extends AppCompatActivity {
         createNotificationChannel();
         notificationManagerCompat = NotificationManagerCompat.from(this);
         notificationManagerCompat.notify(NOTIFICATION_ID, builder.build());
+    }
+
+    public void upload(View view) {
+
+        for (int i = 0; i < 10;i++) {
+            Map<String, Object> uploadMap = new HashMap<>();
+            uploadMap.put("english_" + i, Words.english[i]);
+            uploadMap.put("turkish_" + i, Words.turkish[i]);
+
+            if (!user.getEmail().isEmpty()) {
+                db.collection(user.getEmail())
+                        .document("document_" + i)
+                        .set(uploadMap)
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                            }
+                        });
+
+                Map<String, Object> countMap = new HashMap<>();
+                countMap.put("count", 10);
+
+                db.collection(user.getEmail())
+                        .document("count")
+                        .set(countMap)
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                            }
+                        });
+            }
+        }
+    }
+
+    public void delete(View view){
+
+        if (!user.getEmail().isEmpty()) {
+            db.collection(user.getEmail())
+                    .document("document_" + randomNumber).delete();  //şu an aktif olan sayıya göre direkt documenti sil
+
+            db.collection(user.getEmail()).document("count")
+                    .get()  //count isminde documente referans göster
+                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                            if (task.isSuccessful()){
+                                DocumentSnapshot document = task.getResult();
+
+                                int count = Integer.valueOf(document.get("count").toString());  //count ismindeki documentin değerini(field) al
+                                count--;
+
+                                Map<String, Object> tempMap = new HashMap<>();
+                                tempMap.put("count", count);
+
+                                db.collection(user.getEmail())  //bir azalttığımız count değerini servera gönder
+                                        .document("count")
+                                        .set(tempMap);
+                            }
+                        }
+                    });
+        }
+
+
+    }
+
+    private int getCount(){
+
+        if (!user.getEmail().isEmpty()) {
+            db.collection(user.getEmail()).document("count")
+                    .get()  //count isminde documente referans göster
+                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                            if (task.isSuccessful()) {
+                                DocumentSnapshot document = task.getResult();
+
+                                count = Integer.valueOf(document.get("count").toString());  //count ismindeki documentin değerini(field) al
+                            }
+                        }
+                    });
+        }
+        return count;
     }
 
     @Override
