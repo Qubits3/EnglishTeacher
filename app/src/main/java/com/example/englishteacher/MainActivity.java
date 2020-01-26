@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void createNotification() {
 
-        //ToDo: serverdan random document çek
+        //ToDo: serverdan random document çek -> serverdaki count sayısına bağlı olarak bir random sayı gelecek altta, o sayıyı kullanarak document çek
 
         int count = getCount();
         Toast.makeText(getApplicationContext(), String.valueOf(count), Toast.LENGTH_SHORT).show();
