@@ -13,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -20,17 +21,17 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -40,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     FirebaseFirestore db;
 
     MenuItem optionSignIn, optionSignOut, optionProfile;
+    Button notificationButton;
 
     private final String CHANNEL_ID = "100";
     public final int NOTIFICATION_ID = 1;
@@ -50,8 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
     long[] vibrationPattern = {100, 60, 100, 60};  //Vibration pattern for vibrating  /* bekle -> titre mantığına göre çalışır 100 ms bekle 60 ms titre 100 ms bekle 60ms bekle */
 
-    public static int randomNumber = 0;
-    int count = 1;
+    String gettedEnglish, gettedTurkish, currentDocumentID;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -100,6 +101,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        notificationButton = findViewById(R.id.button);
+
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
         db = FirebaseFirestore.getInstance();
@@ -109,21 +112,17 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        getRandomData();
     }
 
     private void createNotification() {
 
-        //ToDo: serverdan random document çek -> serverdaki count sayısına bağlı olarak bir random sayı gelecek altta, o sayıyı kullanarak document çek
-
-        int count = getCount();
-        Toast.makeText(getApplicationContext(), String.valueOf(count), Toast.LENGTH_SHORT).show();
-        randomNumber = new Random().nextInt(count);
-
-        //Toast.makeText(getApplicationContext(), String.valueOf(getCount()), Toast.LENGTH_LONG).show();
+        getRandomData();
 
         builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.notification_icon)
-                .setContentTitle(Words.english[randomNumber] + " -> " + Words.turkish[randomNumber])
+                .setContentTitle(gettedEnglish + " -> " + gettedTurkish)
                 .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setContentIntent(pendingIntent)
                 .setColorized(true)
@@ -157,6 +156,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void notification(View view) {
 
+        //getRandomData();
+
         createNotification();
         createNotificationChannel();
         notificationManagerCompat = NotificationManagerCompat.from(this);
@@ -165,28 +166,19 @@ public class MainActivity extends AppCompatActivity {
 
     public void upload(View view) {
 
-        for (int i = 0; i < 10;i++) {
+        String[] firstArray = new String[Words.english.length], secondArray = new String[Words.turkish.length];  //this must be local variable
+
+        RandomWordGenerator.generate(Words.english, Words.turkish, firstArray, secondArray);
+
+        for (int i = 0; i < Words.english.length;i++) {
             Map<String, Object> uploadMap = new HashMap<>();
-            uploadMap.put("english_" + i, Words.english[i]);
-            uploadMap.put("turkish_" + i, Words.turkish[i]);
+            uploadMap.put("english", firstArray[i]);
+            uploadMap.put("turkish", secondArray[i]);
+            uploadMap.put("timestamp", Timestamp.now().toDate());
 
             if (!user.getEmail().isEmpty()) {
                 db.collection(user.getEmail())
-                        .document("document_" + i)
-                        .set(uploadMap)
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                            }
-                        });
-
-                Map<String, Object> countMap = new HashMap<>();
-                countMap.put("count", 10);
-
-                db.collection(user.getEmail())
-                        .document("count")
-                        .set(countMap)
+                        .add(uploadMap)
                         .addOnFailureListener(new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
@@ -199,52 +191,39 @@ public class MainActivity extends AppCompatActivity {
 
     public void delete(View view){
 
-        if (!user.getEmail().isEmpty()) {
+        if (!user.getEmail().isEmpty() && gettedEnglish != null && currentDocumentID != null) {
             db.collection(user.getEmail())
-                    .document("document_" + randomNumber).delete();  //şu an aktif olan sayıya göre direkt documenti sil
-
-            db.collection(user.getEmail()).document("count")
-                    .get()  //count isminde documente referans göster
-                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                            if (task.isSuccessful()){
-                                DocumentSnapshot document = task.getResult();
-
-                                int count = Integer.valueOf(document.get("count").toString());  //count ismindeki documentin değerini(field) al
-                                count--;
-
-                                Map<String, Object> tempMap = new HashMap<>();
-                                tempMap.put("count", count);
-
-                                db.collection(user.getEmail())  //bir azalttığımız count değerini servera gönder
-                                        .document("count")
-                                        .set(tempMap);
-                            }
-                        }
-                    });
+                    .document(currentDocumentID).delete();  //şu an aktif olan documenti sil
         }
-
-
     }
 
-    private int getCount(){
+    private void getRandomData() {
 
-        if (!user.getEmail().isEmpty()) {
-            db.collection(user.getEmail()).document("count")
-                    .get()  //count isminde documente referans göster
-                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+        if (!user.getEmail().isEmpty()){
+            db.collection(user.getEmail())
+                    .orderBy("timestamp")
+                    .limit(1)  //bir seferde sadece 1 document seç
+                    .get()
+                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                         @Override
-                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                            if (task.isSuccessful()) {
-                                DocumentSnapshot document = task.getResult();
+                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
 
-                                count = Integer.valueOf(document.get("count").toString());  //count ismindeki documentin değerini(field) al
+                            for (DocumentSnapshot snapshot : queryDocumentSnapshots.getDocuments()){
+                                currentDocumentID = snapshot.getId();
+
+                                Map<String, Object> gettedData = snapshot.getData();
+                                if (gettedData != null) {
+                                    gettedEnglish = gettedData.get("english").toString();
+                                }
+                                if (gettedData != null) {
+                                    gettedTurkish = gettedData.get("turkish").toString();
+                                }
+
+                                Toast.makeText(getApplicationContext(), gettedEnglish + gettedTurkish, Toast.LENGTH_SHORT).show();
                             }
                         }
                     });
         }
-        return count;
     }
 
     @Override
