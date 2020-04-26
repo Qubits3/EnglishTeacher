@@ -5,12 +5,11 @@ import java.util.concurrent.ThreadLocalRandom;
 
 class RandomWordGenerator {
 
-    static void generate(String[] firstArrayToShuffle, String[] secondArrayToShuffle, String[] firstArrayToUse, String[] secondArrayToUse){
+    static void generate(String[] firstArrayToShuffle, String[] secondArrayToShuffle, String[] firstArrayToUse, String[] secondArrayToUse) {
 
         shuffleArray(firstArrayToShuffle, secondArrayToShuffle);
         System.out.println("Birinci");
-        for (int i = 0; i < firstArrayToShuffle.length; i++)
-        {
+        for (int i = 0; i < firstArrayToShuffle.length; i++) {
             System.out.print(firstArrayToShuffle[i] + " ");
         }
 
@@ -20,20 +19,15 @@ class RandomWordGenerator {
         System.out.println();
 
         System.out.println("İkinci");
-        for (int i = 0; i < firstArrayToUse.length; i++)
-        {
+        for (int i = 0; i < firstArrayToUse.length; i++) {
             System.out.print(firstArrayToUse[i] + " ");
         }
         System.out.println();
     }
 
-    // Implementing Fisher–Yates shuffle
-    static void shuffleArray(String[] ar, String[] ar2)
-    {
-        // If running on Java 6 or older, use `new Random()` on RHS here
+    static void shuffleArray(String[] ar, String[] ar2) {
         Random rnd = ThreadLocalRandom.current();
-        for (int i = ar.length - 1; i > 0; i--)
-        {
+        for (int i = ar.length - 1; i > 0; i--) {
             int index = rnd.nextInt(i + 1);
             // Simple swap
             String a = ar[index];

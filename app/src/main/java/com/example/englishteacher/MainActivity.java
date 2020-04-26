@@ -1,19 +1,21 @@
 package com.example.englishteacher;
 
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
+import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -30,18 +32,21 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "MainActivity";
+
+    ArrayList<String> words, UUIDs;
+    PostClass adapter;
+    ListView listView;
 
     private FirebaseAuth mAuth;
     FirebaseUser user;
     FirebaseFirestore db;
 
-    MenuItem optionSignIn, optionSignOut, optionProfile;
-    Button notificationButton;
+    MenuItem optionSignOut, optionProfile;
 
     private final String CHANNEL_ID = "100";
     public final int NOTIFICATION_ID = 1;
@@ -50,64 +55,36 @@ public class MainActivity extends AppCompatActivity {
     PendingIntent pendingIntent;
     NotificationManagerCompat notificationManagerCompat;
 
-    long[] vibrationPattern = {100, 60, 100, 60};  //Vibration pattern for vibrating  /* bekle -> titre mantığına göre çalışır 100 ms bekle 60 ms titre 100 ms bekle 60ms bekle */
+    long[] vibrationPattern = {100, 60, 100, 60};  //Vibration pattern for vibrating  /* bekle -> titre mantığına göre çalışır 100 ms bekle 60 ms titre 100 ms bekle 60ms titre */
 
-    String gettedEnglish, gettedTurkish, currentDocumentID;
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        Log.d(TAG, "onCreateOptionsMenu: ");
-        MenuInflater menuInflater = getMenuInflater();
-        menuInflater.inflate(R.menu.options_menu, menu);
-
-        optionSignIn = menu.findItem(R.id.option_sign_in);
-        optionSignOut = menu.findItem(R.id.option_sign_out);
-        optionProfile = menu.findItem(R.id.option_profile);
-
-        if (user != null){
-            optionSignIn.setVisible(false);
-            optionSignOut.setVisible(true);
-            optionProfile.setVisible(true);
-        }else {
-            optionSignOut.setVisible(false);
-            optionProfile.setVisible(false);
-        }
-
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-
-        if (item.getItemId() == R.id.option_profile){
-            Intent intent = new Intent(getApplicationContext(), AccountActivity.class);
-            startActivity(intent);
-        }else if (item.getItemId() == R.id.option_sign_in){
-            Intent intent = new Intent(getApplicationContext(), SignInActivity.class);
-            startActivity(intent);
-        }else if (item.getItemId() == R.id.option_sign_out){
-            Toast.makeText(getApplicationContext(), "You are signed out", Toast.LENGTH_SHORT).show();
-            mAuth.signOut();
-
-            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-            startActivity(intent);
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
+    String englishWordFromFirebase, turkishWordFromFirebase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        notificationButton = findViewById(R.id.button);
+        listView = findViewById(R.id.listView);
+
+        words = new ArrayList<>();
+        UUIDs = new ArrayList<>();
+
+        adapter = new PostClass(words, this);
+        listView.setAdapter(adapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                createNotification(words.get(position));
+                createNotificationChannel();
+                notificationManagerCompat = NotificationManagerCompat.from(MainActivity.this);
+                notificationManagerCompat.notify(NOTIFICATION_ID, builder.build());
+            }
+        });
 
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
         db = FirebaseFirestore.getInstance();
-
-        Log.d(TAG, "onCreate: ");
 
         Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -116,19 +93,17 @@ public class MainActivity extends AppCompatActivity {
         getRandomData();
     }
 
-    private void createNotification() {
-
-        getRandomData();
+    private void createNotification(String words) {
 
         builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.notification_icon)
-                .setContentTitle(gettedEnglish + " -> " + gettedTurkish)
+                .setContentTitle(words)
                 .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setContentIntent(pendingIntent)
                 .setColorized(true)
                 .setColor(Color.BLUE)  //Set color for app name in the notification
                 .setOnlyAlertOnce(true);  //Bildirim sadece ilk geldiğinde kullanıcıyı uyarır güncellendiğinde uyarmaz
-                //.setAutoCancel(true);  //Üzerine basılınca otomatik kapanır
+        //.setAutoCancel(true);  //Üzerine basılınca otomatik kapanır
     }
 
     private void createNotificationChannel() {
@@ -148,78 +123,35 @@ public class MainActivity extends AppCompatActivity {
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
-                if (notificationManager != null) {
+            if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
             }
         }
     }
 
-    public void notification(View view) {
-
-        //getRandomData();
-
-        createNotification();
-        createNotificationChannel();
-        notificationManagerCompat = NotificationManagerCompat.from(this);
-        notificationManagerCompat.notify(NOTIFICATION_ID, builder.build());
-    }
-
-    public void upload(View view) {
-
-        String[] firstArray = new String[Words.english.length], secondArray = new String[Words.turkish.length];  //this must be local variable
-
-        RandomWordGenerator.generate(Words.english, Words.turkish, firstArray, secondArray);
-
-        for (int i = 0; i < Words.english.length;i++) {
-            Map<String, Object> uploadMap = new HashMap<>();
-            uploadMap.put("english", firstArray[i]);
-            uploadMap.put("turkish", secondArray[i]);
-            uploadMap.put("timestamp", Timestamp.now().toDate());
-
-            if (!user.getEmail().isEmpty()) {
-                db.collection(user.getEmail())
-                        .add(uploadMap)
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                            }
-                        });
-            }
-        }
-    }
-
-    public void delete(View view){
-
-        if (!user.getEmail().isEmpty() && gettedEnglish != null && currentDocumentID != null) {
-            db.collection(user.getEmail())
-                    .document(currentDocumentID).delete();  //şu an aktif olan documenti sil
-        }
-    }
-
     private void getRandomData() {
 
-        if (!user.getEmail().isEmpty()){
+        if (!user.getEmail().isEmpty()) {
             db.collection(user.getEmail())
                     .orderBy("timestamp")
-                    .limit(1)  //bir seferde sadece 1 document seç
+                    .limit(5)  //get only 5 documents each time
                     .get()
                     .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                         @Override
                         public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
 
-                            for (DocumentSnapshot snapshot : queryDocumentSnapshots.getDocuments()){
-                                currentDocumentID = snapshot.getId();
+                            for (DocumentSnapshot snapshot : queryDocumentSnapshots.getDocuments()) {
 
-                                Map<String, Object> gettedData = snapshot.getData();
-                                if (gettedData != null) {
-                                    gettedEnglish = gettedData.get("english").toString();
-                                }
-                                if (gettedData != null) {
-                                    gettedTurkish = gettedData.get("turkish").toString();
-                                }
+                                Map<String, Object> getData = snapshot.getData();
+                                if (getData != null) {
+                                    UUIDs.add(snapshot.getId());
 
-                                Toast.makeText(getApplicationContext(), gettedEnglish + gettedTurkish, Toast.LENGTH_SHORT).show();
+                                    englishWordFromFirebase = getData.get("english").toString();
+                                    turkishWordFromFirebase = getData.get("turkish").toString();
+
+                                    words.add(englishWordFromFirebase + " -> " + turkishWordFromFirebase);
+                                    adapter.notifyDataSetChanged();
+                                }
                             }
                         }
                     });
@@ -227,5 +159,76 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onBackPressed() {}
+    public void onBackPressed() {
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.options_menu, menu);
+
+        optionSignOut = menu.findItem(R.id.option_sign_out);
+        optionProfile = menu.findItem(R.id.option_email);
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        if (item.getItemId() == R.id.option_deleteNotes) {
+            for (String singleNote : UUIDs) {
+                db.collection(user.getEmail())
+                        .document(singleNote).delete();
+            }
+            words.clear();
+            getRandomData();
+        } else if (item.getItemId() == R.id.option_uploadAllNotes) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(R.string.upload_all_notes_question_mark);
+            builder.setMessage(R.string.do_you_really_want_to_upload_all_notes_question_mark);
+            builder.setNegativeButton(R.string.no, null);
+            builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    String[] firstArray = new String[Words.english.length], secondArray = new String[Words.turkish.length];  //this must be local variable
+
+                    RandomWordGenerator.generate(Words.english, Words.turkish, firstArray, secondArray);
+
+                    for (int i = 0; i < Words.english.length; i++) {
+                        Map<String, Object> uploadMap = new HashMap<>();
+                        uploadMap.put("english", firstArray[i]);
+                        uploadMap.put("turkish", secondArray[i]);
+                        uploadMap.put("timestamp", Timestamp.now().toDate());
+
+                        if (!user.getEmail().isEmpty()) {
+                            db.collection(user.getEmail())
+                                    .add(uploadMap)
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                                        }
+                                    });
+                        }
+                    }
+                }
+            });
+            builder.show();
+        } else if (item.getItemId() == R.id.option_email) {
+            Toast.makeText(getApplicationContext(), user.getEmail(), Toast.LENGTH_LONG).show();
+        } else if (item.getItemId() == R.id.option_sign_out) {
+            Toast.makeText(getApplicationContext(), "You are signed out", Toast.LENGTH_SHORT).show();
+            mAuth.signOut();
+
+            Intent intent = new Intent(getApplicationContext(), SignInActivity.class);
+            startActivity(intent);
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
 }
